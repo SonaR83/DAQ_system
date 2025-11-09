@@ -13,6 +13,9 @@
 		<Property Name="specify.custom.address" Type="Bool">false</Property>
 		<Item Name="Interfaces" Type="Folder">
 			<Item Name="Send Notification" Type="Folder">
+				<Item Name="Messages" Type="Folder">
+					<Item Name="send response Msg.lvclass" Type="LVClass" URL="../Send Notification Messages/send response Msg/send response Msg.lvclass"/>
+				</Item>
 				<Item Name="Send Notification.lvclass" Type="LVClass" URL="../Send Notification/Send Notification.lvclass"/>
 			</Item>
 			<Item Name="Udate Nested Attributes" Type="Folder">
@@ -23,11 +26,10 @@
 		</Item>
 		<Item Name="root_actor.lvlib" Type="Library" URL="../root_actor/root_actor.lvlib"/>
 		<Item Name="command_parser.lvlib" Type="Library" URL="../command_parser/command_parser.lvlib"/>
-		<Item Name="launcher.vi" Type="VI" URL="../launcher.vi"/>
-		<Item Name="send response Msg.lvclass" Type="LVClass" URL="../Send Notification Messages/send response Msg/send response Msg.lvclass"/>
 		<Item Name="UDP_receiver.lvlib" Type="Library" URL="../UDP_receiver/UDP_receiver.lvlib"/>
 		<Item Name="UDP_transmitter.lvlib" Type="Library" URL="../UDP_transmitter/UDP_transmitter.lvlib"/>
-		<Item Name="DAQ Voltage.lvlib" Type="Library" URL="../DAQ Voltage/DAQ Voltage.lvlib"/>
+		<Item Name="DAQVoltage.lvlib" Type="Library" URL="../DAQVoltage/DAQVoltage.lvlib"/>
+		<Item Name="launcher.vi" Type="VI" URL="../launcher.vi"/>
 		<Item Name="Dependencies" Type="Dependencies"/>
 		<Item Name="Build Specifications" Type="Build"/>
 	</Item>
