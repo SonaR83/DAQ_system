@@ -4,8 +4,10 @@ import socket
 # import anyio  # ставится с uvicorn[standard] или просто: pip install anyio
 import asyncio
 
-app = FastAPI()
+from cors import configure_cors
 
+app = FastAPI()
+configure_cors(app)
 
 async def udp_roundtrip(host: str, port: int, payload: bytes,
                         timeout: float = 1.0, bufsize: int = 65535):
@@ -139,6 +141,7 @@ async def get_voltage_list():
         # В крайнем случае отдадим сырые байты в hex
         raise HTTPException(status_code=502,
                             detail=f"Decode error ({enc_in}): {e}")
+    # ["14.3",/n]
     voltage_list = [float(x) for x in text.strip().split(",") if x]
     return {
         "sent_to": f"{host}:{port}",
