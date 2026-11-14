@@ -2,12 +2,13 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
+from schemas.voltage import VoltageListResponse, VoltageResponse
 from services.udp import udp_roundtrip
 
 router = APIRouter(prefix="/voltage")
 
 
-@router.get("/get_last_value")
+@router.get("/get_last_value", response_model=VoltageResponse)
 async def get_last_voltage_value() -> dict[str, Any]:
     message: str = "voltage"
     host: str = "127.0.0.1"
@@ -47,7 +48,7 @@ async def get_last_voltage_value() -> dict[str, Any]:
     }
 
 
-@router.get("/get_all")
+@router.get("/get_all", response_model=VoltageListResponse)
 async def get_voltage_list() -> dict[str, Any]:
     message: str = "voltage_list"
     host: str = "127.0.0.1"

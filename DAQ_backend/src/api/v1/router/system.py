@@ -2,12 +2,14 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
+from schemas.system import TextResponse
 from services.udp import udp_roundtrip
 
 router = APIRouter()
 
 
-@router.get("/udp_request", include_in_schema=False)
+@router.get("/udp_request", include_in_schema=False,
+            response_model=TextResponse)
 async def udp_request(
         message: str,
         host: str = "127.0.0.1",
@@ -48,7 +50,7 @@ async def udp_request(
     }
 
 
-@router.get("/quit")
+@router.get("/quit", response_model=TextResponse)
 async def quit_application() -> dict[str, Any]:
     message: str = "quit"
     host: str = "127.0.0.1"
