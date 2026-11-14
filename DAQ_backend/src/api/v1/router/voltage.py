@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import ValidationError
 
 from schemas.voltage import VoltageListResponse, VoltageResponse
-from services.udp import udp_roundtrip
+from services.udp import send_command
 
 router = APIRouter(prefix="/voltage")
 
@@ -10,92 +10,26 @@ router = APIRouter(prefix="/voltage")
 @router.get("/get_last_value", response_model=VoltageResponse)
 async def get_last_voltage_value() -> VoltageResponse:
     message: str = "voltage"
-    host: str = "127.0.0.1"
-    port: int = 61557
-    enc_out: str = "utf-8"  # чем кодируем исходящее сообщение
-    enc_in: str = "utf-8"  # чем декодируем входящий ответ
-    errors: str = "strict"  # 'strict' | 'replace' | 'ignore'
-    timeout: float = 1.5  # секунды ожидания ответа
-    # Строку HTTP-параметра кодируем, например, в cp1251
+    reply = await send_command(message)
     try:
-        payload: bytes = message.encode(enc_out, errors=errors)
-    except Exception as e:
-        raise HTTPException(status_code=400,
-                            detail=f"Encode error ({enc_out}): {e}")
-
-    # Отправляем и ждём ответ
-    try:
-        data, addr = await udp_roundtrip(host, port, payload, timeout=timeout)
-    except TimeoutError:
-        raise HTTPException(status_code=504, detail="UDP response timeout")
-
-    # Декодируем ответ (как правило, та же кодировка)
-    try:
-        text: str = data.decode(enc_in, errors="replace")
-    except Exception as e:
-        # В крайнем случае отдадим сырые байты в hex
-        raise HTTPException(status_code=502,
-                            detail=f"Decode error ({enc_in}): {e}")
-
-    try:
-        return VoltageResponse.model_validate({
-            "sent_to": f"{host}:{port}",
-            "out_encoding": enc_out,
-            "in_encoding": enc_in,
-            "from": f"{addr[0]}:{addr[1]}",
-            "response_len": len(data),
-            "response_text": text,
-        })
+        return VoltageResponse.model_validate(reply)
     except ValidationError as e:
         # Устройство прислало данные, которые не удалось разобрать
         raise HTTPException(
             status_code=502,
             detail=f"Invalid data from device ({message}): "
-                   f"{text!r} - {e.errors()[0]['msg']}")
+                   f"{reply['response_text']!r} - {e.errors()[0]['msg']}")
 
 
 @router.get("/get_all", response_model=VoltageListResponse)
 async def get_voltage_list() -> VoltageListResponse:
     message: str = "voltage_list"
-    host: str = "127.0.0.1"
-    port: int = 61557
-    enc_out: str = "utf-8"  # чем кодируем исходящее сообщение
-    enc_in: str = "utf-8"  # чем декодируем входящий ответ
-    errors: str = "strict"  # 'strict' | 'replace' | 'ignore'
-    timeout: float = 1.5  # секунды ожидания ответа
-    # Строку HTTP-параметра кодируем, например, в cp1251
+    reply = await send_command(message)
     try:
-        payload: bytes = message.encode(enc_out, errors=errors)
-    except Exception as e:
-        raise HTTPException(status_code=400,
-                            detail=f"Encode error ({enc_out}): {e}")
-
-    # Отправляем и ждём ответ
-    try:
-        data, addr = await udp_roundtrip(host, port, payload, timeout=timeout)
-    except TimeoutError:
-        raise HTTPException(status_code=504, detail="UDP response timeout")
-
-    # Декодируем ответ (как правило, та же кодировка)
-    try:
-        text: str = data.decode(enc_in, errors="replace")
-    except Exception as e:
-        # В крайнем случае отдадим сырые байты в hex
-        raise HTTPException(status_code=502,
-                            detail=f"Decode error ({enc_in}): {e}")
-    # ["14.3",/n]
-    try:
-        return VoltageListResponse.model_validate({
-            "sent_to": f"{host}:{port}",
-            "out_encoding": enc_out,
-            "in_encoding": enc_in,
-            "from": f"{addr[0]}:{addr[1]}",
-            "response_len": len(data),
-            "response_text": text,
-        })
+        return VoltageListResponse.model_validate(reply)
     except ValidationError as e:
         # Устройство прислало данные, которые не удалось разобрать
         raise HTTPException(
             status_code=502,
             detail=f"Invalid data from device ({message}): "
-                   f"{text!r} - {e.errors()[0]['msg']}")
+                   f"{reply['response_text']!r} - {e.errors()[0]['msg']}")
