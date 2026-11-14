@@ -1,6 +1,5 @@
-from typing import Any
-
 from fastapi import APIRouter, HTTPException
+from pydantic import ValidationError
 
 from schemas.voltage import VoltageListResponse, VoltageResponse
 from services.udp import udp_roundtrip
@@ -9,7 +8,7 @@ router = APIRouter(prefix="/voltage")
 
 
 @router.get("/get_last_value", response_model=VoltageResponse)
-async def get_last_voltage_value() -> dict[str, Any]:
+async def get_last_voltage_value() -> VoltageResponse:
     message: str = "voltage"
     host: str = "127.0.0.1"
     port: int = 61557
@@ -38,18 +37,25 @@ async def get_last_voltage_value() -> dict[str, Any]:
         raise HTTPException(status_code=502,
                             detail=f"Decode error ({enc_in}): {e}")
 
-    return {
-        "sent_to": f"{host}:{port}",
-        "out_encoding": enc_out,
-        "in_encoding": enc_in,
-        "from": f"{addr[0]}:{addr[1]}",
-        "response_len": len(data),
-        "response_text": float(text),
-    }
+    try:
+        return VoltageResponse.model_validate({
+            "sent_to": f"{host}:{port}",
+            "out_encoding": enc_out,
+            "in_encoding": enc_in,
+            "from": f"{addr[0]}:{addr[1]}",
+            "response_len": len(data),
+            "response_text": text,
+        })
+    except ValidationError as e:
+        # Устройство прислало данные, которые не удалось разобрать
+        raise HTTPException(
+            status_code=502,
+            detail=f"Invalid data from device ({message}): "
+                   f"{text!r} - {e.errors()[0]['msg']}")
 
 
 @router.get("/get_all", response_model=VoltageListResponse)
-async def get_voltage_list() -> dict[str, Any]:
+async def get_voltage_list() -> VoltageListResponse:
     message: str = "voltage_list"
     host: str = "127.0.0.1"
     port: int = 61557
@@ -78,12 +84,18 @@ async def get_voltage_list() -> dict[str, Any]:
         raise HTTPException(status_code=502,
                             detail=f"Decode error ({enc_in}): {e}")
     # ["14.3",/n]
-    voltage_list: list[float] = [float(x) for x in text.strip().split(",") if x]
-    return {
-        "sent_to": f"{host}:{port}",
-        "out_encoding": enc_out,
-        "in_encoding": enc_in,
-        "from": f"{addr[0]}:{addr[1]}",
-        "response_len": len(data),
-        "response_text": voltage_list,
-    }
+    try:
+        return VoltageListResponse.model_validate({
+            "sent_to": f"{host}:{port}",
+            "out_encoding": enc_out,
+            "in_encoding": enc_in,
+            "from": f"{addr[0]}:{addr[1]}",
+            "response_len": len(data),
+            "response_text": text,
+        })
+    except ValidationError as e:
+        # Устройство прислало данные, которые не удалось разобрать
+        raise HTTPException(
+            status_code=502,
+            detail=f"Invalid data from device ({message}): "
+                   f"{text!r} - {e.errors()[0]['msg']}")
