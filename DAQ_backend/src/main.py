@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI
 
-from cors import configure_cors
+from core.cors import configure_cors
 from api.v1.router.voltage import router as voltage_router
 from api.v1.router.system import router as system_router
 

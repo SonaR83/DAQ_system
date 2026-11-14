@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
-from udp import udp_roundtrip
+from services.udp import udp_roundtrip
 
 router = APIRouter(prefix="/voltage")
 
