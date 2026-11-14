@@ -1,4 +1,6 @@
 # main.py
+from typing import Any
+
 from fastapi import FastAPI, HTTPException
 import socket
 # import anyio  # ставится с uvicorn[standard] или просто: pip install anyio
@@ -9,14 +11,16 @@ from cors import configure_cors
 app = FastAPI()
 configure_cors(app)
 
-async def udp_roundtrip(host: str, port: int, payload: bytes,
-                        timeout: float = 1.0, bufsize: int = 65535):
+async def udp_roundtrip(
+        host: str, port: int, payload: bytes,
+        timeout: float = 1.0, bufsize: int = 65535
+) -> tuple[bytes, tuple[str, int]]:
     """
     Отправляем UDP-пакет и ожидаем 1 ответ (blocking IO), но запускаем в потоке,
     чтобы не блокировать event loop FastAPI.
     """
 
-    def _send_recv():
+    def _send_recv() -> tuple[bytes, tuple[str, int]]:
         # User Datagram Protocol
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.settimeout(timeout)
@@ -40,10 +44,10 @@ async def udp_request(
         enc_in: str = "cp1251",  # чем декодируем входящий ответ
         errors: str = "strict",  # 'strict' | 'replace' | 'ignore'
         timeout: float = 1.5  # секунды ожидания ответа
-):
+) -> dict[str, Any]:
     # Строку HTTP-параметра кодируем, например, в cp1251
     try:
-        payload = message.encode(enc_out, errors=errors)
+        payload: bytes = message.encode(enc_out, errors=errors)
     except Exception as e:
         raise HTTPException(status_code=400,
                             detail=f"Encode error ({enc_out}): {e}")
@@ -56,7 +60,7 @@ async def udp_request(
 
     # Декодируем ответ (как правило, та же кодировка)
     try:
-        text = data.decode(enc_in, errors="replace")
+        text: str = data.decode(enc_in, errors="replace")
     except Exception as e:
         # В крайнем случае отдадим сырые байты в hex
         raise HTTPException(status_code=502,
@@ -73,8 +77,8 @@ async def udp_request(
 
 
 @app.get("/voltage/get_last_value")
-async def get_last_voltage_value():
-    message = "voltage"
+async def get_last_voltage_value() -> dict[str, Any]:
+    message: str = "voltage"
     host: str = "127.0.0.1"
     port: int = 61557
     enc_out: str = "utf-8"  # чем кодируем исходящее сообщение
@@ -83,7 +87,7 @@ async def get_last_voltage_value():
     timeout: float = 1.5  # секунды ожидания ответа
     # Строку HTTP-параметра кодируем, например, в cp1251
     try:
-        payload = message.encode(enc_out, errors=errors)
+        payload: bytes = message.encode(enc_out, errors=errors)
     except Exception as e:
         raise HTTPException(status_code=400,
                             detail=f"Encode error ({enc_out}): {e}")
@@ -96,7 +100,7 @@ async def get_last_voltage_value():
 
     # Декодируем ответ (как правило, та же кодировка)
     try:
-        text = data.decode(enc_in, errors="replace")
+        text: str = data.decode(enc_in, errors="replace")
     except Exception as e:
         # В крайнем случае отдадим сырые байты в hex
         raise HTTPException(status_code=502,
@@ -113,8 +117,8 @@ async def get_last_voltage_value():
 
 
 @app.get("/voltage/get_all")
-async def get_voltage_list():
-    message = "voltage_list"
+async def get_voltage_list() -> dict[str, Any]:
+    message: str = "voltage_list"
     host: str = "127.0.0.1"
     port: int = 61557
     enc_out: str = "utf-8"  # чем кодируем исходящее сообщение
@@ -123,7 +127,7 @@ async def get_voltage_list():
     timeout: float = 1.5  # секунды ожидания ответа
     # Строку HTTP-параметра кодируем, например, в cp1251
     try:
-        payload = message.encode(enc_out, errors=errors)
+        payload: bytes = message.encode(enc_out, errors=errors)
     except Exception as e:
         raise HTTPException(status_code=400,
                             detail=f"Encode error ({enc_out}): {e}")
@@ -136,13 +140,13 @@ async def get_voltage_list():
 
     # Декодируем ответ (как правило, та же кодировка)
     try:
-        text = data.decode(enc_in, errors="replace")
+        text: str = data.decode(enc_in, errors="replace")
     except Exception as e:
         # В крайнем случае отдадим сырые байты в hex
         raise HTTPException(status_code=502,
                             detail=f"Decode error ({enc_in}): {e}")
     # ["14.3",/n]
-    voltage_list = [float(x) for x in text.strip().split(",") if x]
+    voltage_list: list[float] = [float(x) for x in text.strip().split(",") if x]
     return {
         "sent_to": f"{host}:{port}",
         "out_encoding": enc_out,
@@ -154,8 +158,8 @@ async def get_voltage_list():
 
 
 @app.get("/quit")
-async def quit_application():
-    message = "quit"
+async def quit_application() -> dict[str, Any]:
+    message: str = "quit"
     host: str = "127.0.0.1"
     port: int = 61557
     enc_out: str = "utf-8"  # чем кодируем исходящее сообщение
@@ -164,7 +168,7 @@ async def quit_application():
     timeout: float = 1.5  # секунды ожидания ответа
     # Строку HTTP-параметра кодируем, например, в cp1251
     try:
-        payload = message.encode(enc_out, errors=errors)
+        payload: bytes = message.encode(enc_out, errors=errors)
     except Exception as e:
         raise HTTPException(status_code=400,
                             detail=f"Encode error ({enc_out}): {e}")
@@ -177,7 +181,7 @@ async def quit_application():
 
     # Декодируем ответ (как правило, та же кодировка)
     try:
-        text = data.decode(enc_in, errors="replace")
+        text: str = data.decode(enc_in, errors="replace")
     except Exception as e:
         # В крайнем случае отдадим сырые байты в hex
         raise HTTPException(status_code=502,
