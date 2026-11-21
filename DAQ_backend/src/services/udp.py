@@ -55,6 +55,15 @@ async def send_command(
         data, addr = await udp_roundtrip(host, port, payload, timeout=timeout)
     except TimeoutError:
         raise HTTPException(status_code=504, detail="UDP response timeout")
+    except ConnectionError:
+        # На порту никто не слушает (LabVIEW не запущен): ОС получает ICMP
+        # "port unreachable", и recvfrom падает с ConnectionResetError
+        # (WinError 10054 в Windows). Без этого обработчика FastAPI вернул бы
+        # 500 без CORS-заголовков, и браузер показал бы «сервер недоступен».
+        raise HTTPException(
+            status_code=503,
+            detail=f"LabVIEW is not listening on {host}:{port} "
+                   f"(UDP port unreachable)")
 
     # Декодируем ответ (как правило, та же кодировка)
     try:
