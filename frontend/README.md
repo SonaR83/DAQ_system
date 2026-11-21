@@ -1,87 +1,40 @@
-# Welcome to React Router!
+# DAQ frontend — уроки по хукам React
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Учебный интерфейс системы сбора данных: React 19 + React Router 7 (режим SPA,
+`ssr: false`) + Tailwind CSS 4 + Flowbite React.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+Каждая страница `/lesson/1` … `/lesson/6` демонстрирует один хук React на задаче
+измерения напряжения. Теория, разбор кода и задания — в папке [`docs/`](docs/README.md).
 
-## Features
-
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+## Запуск в режиме разработки
 
 ```bash
 npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Приложение: <http://localhost:5173>. Backend (FastAPI) должен работать на
+`http://localhost:8000`, см. [`docs/README.md`](docs/README.md#запуск).
 
-## Building for Production
+## Команды
 
-Create a production build:
+| Команда             | Что делает                                     |
+|---------------------|------------------------------------------------|
+| `npm run dev`       | dev-сервер с горячей перезагрузкой             |
+| `npm run typecheck` | генерация типов маршрутов и проверка TypeScript |
+| `npm run build`     | сборка статического SPA в `build/client`        |
+| `npm start`         | просмотр собранной версии (`vite preview`)      |
 
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
+## Docker
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+docker build -t daq-frontend .
+docker run -p 80:80 daq-frontend   # http://localhost
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+Собранное SPA раздаёт nginx (`nginx.conf`). Неизвестные пути отдают `index.html`,
+поэтому прямые ссылки вида `/lesson/3` работают.
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+Учтите CORS: backend разрешает запросы с `http://localhost` (порт 80) и
+`http://localhost:5173`. Для другого порта добавьте адрес в
+`DAQ_backend/src/core/cors.py`.

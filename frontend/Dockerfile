@@ -1,22 +1,14 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY . /app
-WORKDIR /app
-RUN npm ci
-
-FROM node:20-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
-WORKDIR /app
-RUN npm ci --omit=dev
-
+# Сборка SPA (ssr: false): на выходе только статические файлы в build/client
 FROM node:20-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
 WORKDIR /app
+COPY package.json package-lock.json /app/
+RUN npm ci
+COPY . /app/
 RUN npm run build
 
-FROM node:20-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
-WORKDIR /app
-CMD ["npm", "run", "start"]
+# Раздача статики через nginx. Любой неизвестный путь (например, /lesson/3)
+# отдаёт index.html, дальше маршрут обрабатывает React Router в браузере.
+FROM nginx:alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build-env /app/build/client /usr/share/nginx/html
+EXPOSE 80
